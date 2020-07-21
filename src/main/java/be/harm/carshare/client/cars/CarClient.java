@@ -39,12 +39,16 @@ public class CarClient {
         return restTemplate.getForObject(baseUrl() + carId, Car.class);
     }
     public List<Car> getCars() {
-        Car[] receivedCars = restTemplate.getForObject(hostName +":" + port + CARS_PATH, Car[].class);
+        Car[] receivedCars = restTemplate.getForObject(baseUrl(), Car[].class);
         return Arrays.asList(receivedCars);
     }
 
     public Car saveNewCar(@Valid @RequestBody Car car) {
-        return restTemplate.postForObject(hostName + ":" + port + CARS_PATH, car, Car.class);
+        return restTemplate.postForObject(baseUrl(), car, Car.class);
+    }
+
+    private String baseUrl() {
+        return "http://" + hostName + ":" + port + CARS_PATH;
     }
 
 }
