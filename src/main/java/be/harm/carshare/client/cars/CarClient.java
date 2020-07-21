@@ -1,7 +1,9 @@
 package be.harm.carshare.client.cars;
 
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,25 +14,29 @@ import java.util.Arrays;
 import java.util.List;
 
 @Component
-@ConfigurationProperties(value = "be.harm.carshare.cars", ignoreUnknownFields = false)
 public class CarClient {
     private static final String CARS_PATH = "/cars/";
 
-    @Setter
+    private final EurekaClient eurekaClient;
+
     private String hostName;
 
-    @Setter
-    private String port;
+    private int port;
 
     private final RestTemplate restTemplate;
 
-    public CarClient(RestTemplateBuilder restTemplateBuilder) {
+    public CarClient(@Qualifier("eurekaClient") EurekaClient eurekaClient, RestTemplateBuilder restTemplateBuilder) {
+        this.eurekaClient = eurekaClient;
         this.restTemplate = restTemplateBuilder.build();
+
+        Application carsService = this.eurekaClient.getApplication("carshare-carsservice");
+        InstanceInfo instanceInfo = carsService.getInstances().get(0);
+        this.hostName = instanceInfo.getHostName();
+        this.port = instanceInfo.getPort();
     }
 
     public Car getCarById(long carId) {
-        Car receivedCar = restTemplate.getForObject(hostName +":" + port + CARS_PATH + "/" + carId, Car.class);
-        return receivedCar;
+        return restTemplate.getForObject(baseUrl() + carId, Car.class);
     }
     public List<Car> getCars() {
         Car[] receivedCars = restTemplate.getForObject(hostName +":" + port + CARS_PATH, Car[].class);
