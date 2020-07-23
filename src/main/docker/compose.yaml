@@ -1,0 +1,67 @@
+version: '3.8'
+services:
+  eureka:
+    image: harmdw/carshare-eureka:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8761:8761
+
+  config:
+    image: harmdw/carshare-configserver:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8888:8888
+    depends_on:
+      - eureka
+
+  cars:
+    image: harmdw/carshare-cars:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8083:8083
+    depends_on:
+      - eureka
+
+  users:
+    image: harmdw/carshare-users:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8081:8081
+    depends_on:
+      - eureka
+
+  reservations:
+    image: harmdw/carshare-reservations:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8082:8082
+    depends_on:
+      - eureka
+
+  client:
+    image: harmdw/carshare-client:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 8080:8080
+    depends_on:
+      - eureka
+      - users
+      - reservations
+      - cars
+
+  gateway:
+    image: harmdw/carshare-gateway
+    environment:
+      - SPRING_PROFILES_ACTIVE="${SPRING_PROFILES}"
+    ports:
+      - 9090:9090
+    depends_on:
+      - users
+      - reservations
+      - cars
